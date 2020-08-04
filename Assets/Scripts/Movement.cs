@@ -10,10 +10,12 @@ public class Movement : MonoBehaviour
     private bool movement_input = false;
 
     private Rewind rewind;
+    private Animator animator;
 
     void Awake()
     {
         rewind = GetComponent<Rewind>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     void Update()
@@ -26,7 +28,13 @@ public class Movement : MonoBehaviour
             if (movement_input)
             {
                 Execute(Direction.Right);
+                animator.SetBool("Walking", true);
             }
+            else
+            {
+                animator.SetBool("Walking", false);
+            }
+
         }
     }
 
