@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,9 +8,7 @@ public class Rewind : MonoBehaviour
     public GameObject canvas;
 
     private List<bool> movement_track = new List<bool>();
-    private List<bool> jump_track = new List<bool>();
-
-    private bool rewind_active = false;
+    public static bool rewind_active = false;
 
     private Movement movement;
     private Jump jump;
@@ -28,6 +27,7 @@ public class Rewind : MonoBehaviour
             {
                 rewind_active = true;
                 canvas.SetActive(true);
+                DeleteFramesUntilMovement();
                 StartCoroutine(Rewind_CO());
             }
         }
@@ -41,13 +41,22 @@ public class Rewind : MonoBehaviour
         }
     }
 
+    private void DeleteFramesUntilMovement()
+    {
+        int length = movement_track.Count;
+
+
+        while(length-1 > 0 && movement_track[length-1] == false)
+        {
+            movement_track.RemoveAt(length - 1);
+            length--;
+        }
+    }
+
     IEnumerator Rewind_CO()
     {
         int length = movement_track.Count;
         int actual_index = length - 1;
-
-        Debug.Log("MovementTrack: " + movement_track.Count);
-        Debug.Log("JumpTrack: " + jump_track.Count);
 
         while (rewind_active && actual_index >= 0)
         {
@@ -55,14 +64,11 @@ public class Rewind : MonoBehaviour
             movement_track.RemoveAt(actual_index);
 
             if (movement_input)
-                movement.Execute(Direction.Left);
-
-            bool jump_input = jump_track[actual_index];
-            jump_track.RemoveAt(actual_index);
-
-            if (jump_input)
-                jump.Execute();
-
+            {
+                if(!jump.jumping)
+                    movement.Execute(Direction.Left);
+            }
+                
             actual_index--;
 
             yield return new WaitForEndOfFrame();
@@ -72,10 +78,5 @@ public class Rewind : MonoBehaviour
     public void AddMovementTrack(bool movement_input)
     {
         movement_track.Add(movement_input);
-    }
-
-    public void AddJumpTrack(bool jump_input)
-    {
-        jump_track.Add(jump_input);
     }
 }

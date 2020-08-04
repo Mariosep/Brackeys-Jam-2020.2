@@ -4,52 +4,55 @@ using UnityEngine;
 
 public class Jump : MonoBehaviour
 {
-    public float force = 5f;
+    public bool jumping = false;
+
+    [Range(0.1f, 1f)]
+    public float inclination = 0.5f;
+    public float impulse_force = 100f;
 
     private Rigidbody2D rb;
-    private bool jump_input = false;
-    public bool jumping = false;
-    public bool wasJumping_previousFrame = false;
-
-    private Rewind rewind;
+    private Movement movement;
+    private Fall fall;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rewind = GetComponent<Rewind>();
+        movement = GetComponent<Movement>();
+        fall = GetComponent<Fall>();
     }
 
-    void Update()
+    public void Execute(Direction direction, int fallen_hight)
     {
-        jump_input = Input.GetButtonDown("Jump");
+        Vector2 final_direction = new Vector2((int)direction * inclination, 1f);
+        rb.AddForce(final_direction * impulse_force * (fallen_hight + 1), ForceMode2D.Impulse);
+    }
 
-        if (jump_input && !jumping)
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.collider.CompareTag("Jumper") && !jumping)
         {
-            Execute();
+            if(Rewind.rewind_active)
+                Execute(Direction.Left, fall.fallen_height);
+            else
+                Execute(Direction.Right, fall.fallen_height);
+
             jumping = true;
-            rewind.AddJumpTrack(false);
+            movement.movement_blocked = true;
+            fall.fallen_height = 0;
         }
-        else if (wasJumping_previousFrame && !jumping)
+        else if (collision.collider.CompareTag("Jumper") && jumping)
         {
-            rewind.AddJumpTrack(true);
+            if(Rewind.rewind_active)
+                Execute(Direction.Left, fall.fallen_height);
+            else
+                Execute(Direction.Right, fall.fallen_height);
+
+            fall.fallen_height = 0;
         }
-        else
+        else if (jumping)
         {
-            rewind.AddJumpTrack(false);
+            movement.movement_blocked = false;
+            jumping = false;
         }
-
-        wasJumping_previousFrame = jumping;
-    }
-
-    public void Execute()
-    {
-        Vector3 jump_force = Vector3.up * Time.fixedDeltaTime * force;
-
-        rb.AddForce(jump_force, ForceMode2D.Impulse);
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        jumping = false;
     }
 }

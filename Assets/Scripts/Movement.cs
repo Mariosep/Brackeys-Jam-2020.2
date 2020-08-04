@@ -5,6 +5,7 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     public float speed = 5f;
+    public bool movement_blocked = false;
 
     private bool movement_input = false;
 
@@ -17,13 +18,15 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        movement_input = Input.GetKey(KeyCode.D);
+        if (!movement_blocked){ 
+            movement_input = Input.GetKey(KeyCode.D);
 
-        rewind.AddMovementTrack(movement_input);
+            rewind.AddMovementTrack(movement_input);
 
-        if (movement_input)
-        {
-            Execute(Direction.Right);
+            if (movement_input)
+            {
+                Execute(Direction.Right);
+            }
         }
     }
 
@@ -33,6 +36,7 @@ public class Movement : MonoBehaviour
 
         transform.Translate(movement_force);
     }
+
 }
 
-public enum Direction { Left = -1, Right = 1};
+public enum Direction {Left = -1, Right = 1};
